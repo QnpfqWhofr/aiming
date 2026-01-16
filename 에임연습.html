@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Clicker Game</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: black;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            text-align: center;
+            overflow: hidden;
+        }
+        .container {
+            position: relative;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn {
+            background: #ffcc00;
+            border: 2px solid white;
+            padding: 15px 30px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.3s;
+        }
+        .btn:hover {
+            background: #ff9900;
+        }
+        @keyframes stars {
+            from { transform: translateY(0); }
+            to { transform: translateY(-100vh); }
+        }
+        .stars {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: url('https://www.transparenttextures.com/patterns/stardust.png');
+            animation: stars 10s linear infinite;
+            z-index: 0;
+        }
+        canvas {
+            background: black;
+            display: block;
+            margin: 20px auto;
+            border: 2px solid white;
+            z-index: 1;
+        }
+        .info-box {
+            background: #222;
+            border: 2px solid white;
+            padding: 10px 20px;
+            margin: 10px;
+            display: inline-block;
+            z-index: 1;
+        }
+        .difficulty-select {
+            margin-top: 10px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            padding: 10px;
+            background-color: #111;
+            color: white;
+            border: 2px solid white;
+        }
+    </style>
+</head>
+<body>
+    <div class="stars"></div>
+    <div class="container">
+        <h1>aiming practice</h1>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+        <div class="info-box">Score: <span id="score">0</span></div>
+        <div class="info-box" id="timer">Time: 30</div>
+
+        <select id="difficulty" class="difficulty-select">
+            <option value="easy">Easy</option>
+            <option value="normal" selected>Normal</option>
+            <option value="hard">Hard</option>
+            <option value="exetreme">Exetreme</option>
+            <option value="impossible">Impossible</option>
+        </select>
+
+        <button class="btn" id="startBtn" onclick="startGame()">Start</button>
+        <button class="btn" id="restartBtn" onclick="startGame()" style="display:none;">Restart</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreDisplay = document.getElementById("score");
+        const timerDisplay = document.getElementById("timer");
+        const startBtn = document.getElementById("startBtn");
+        const restartBtn = document.getElementById("restartBtn");
+        const difficultySelect = document.getElementById("difficulty");
+
+        let score = 0;
+        let timeLeft = 30;
+        let timer;
+        let isGameRunning = false;
+
+        const target = {
+            x: 0,
+            y: 0,
+            size: 30
+        };
+
+        function setTargetSize() {
+            const difficulty = difficultySelect.value;
+            if (difficulty === "easy") {
+                target.size = 40;
+            } else if (difficulty === "normal") {
+                target.size = 30;
+            } else if (difficulty === "hard") {
+                target.size = 20;
+            } else if (difficulty === "exetreme") {
+                target.size = 15;
+            } else if (difficulty === "impossible") {
+                target.size = 5;
+            }
+        }
+
+        function randomPosition() {
+            const margin = target.size;
+            target.x = margin + Math.random() * (canvas.width - 2 * margin);
+            target.y = margin + Math.random() * (canvas.height - 2 * margin);
+        }
+
+        function drawTarget() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = "#ffcc00";
+            ctx.beginPath();
+            ctx.arc(target.x, target.y, target.size, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function startGame() {
+            score = 0;
+            timeLeft = 30;
+            isGameRunning = true;
+
+            setTargetSize(); // 난이도에 따라 크기 설정
+
+            scoreDisplay.textContent = score;
+            timerDisplay.textContent = `Time: ${timeLeft}`;
+
+            startBtn.style.display = "none";
+            restartBtn.style.display = "none";
+
+            randomPosition();
+            drawTarget();
+
+            timer = setInterval(() => {
+                timeLeft--;
+                timerDisplay.textContent = `Time: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    isGameRunning = false;
+                    alert("Game Over! Your score: " + score);
+                    restartBtn.style.display = "block";
+                }
+            }, 1000);
+        }
+
+        canvas.addEventListener("click", (event) => {
+            if (!isGameRunning) return;
+
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = event.clientX - rect.left;
+            const mouseY = event.clientY - rect.top;
+
+            const dx = mouseX - target.x;
+            const dy = mouseY - target.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+
+            if (distance < target.size) {
+                score++;
+                randomPosition();
+            } else {
+                score = Math.max(0, score - 1);
+            }
+
+            scoreDisplay.textContent = score;
+            drawTarget();
+        });
+    </script>
+</body>
+</html>
